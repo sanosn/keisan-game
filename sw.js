@@ -1,0 +1,51 @@
+/* =========================================================
+   オフラインで遊べるようにする仕組み（サービスワーカー）
+   - 一度ひらいたファイルをタブレットの中に保存しておき、
+     ネットがないときは保存したものを使う
+   - アプリを更新したら VERSION の数字を1つ上げる
+   ========================================================= */
+const VERSION = 'v1';
+const CACHE = 'keisan-' + VERSION;
+
+const APP_FILES = [
+  './',
+  './index.html',
+  './style.css',
+  './game.js',
+  './manifest.webmanifest',
+  './icons/icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+];
+
+// インストール時：アプリのファイルをまとめて保存
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_FILES)).then(() => self.skipWaiting()));
+});
+
+// 古いバージョンの保存データを消す
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+// 保存してあるものをすぐ返し、ネットがつながっていれば裏で新しいものに入れかえる
+// （フォントもここで保存されるので、2回目からはオフラインでも同じ文字で表示される）
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(e.request, { ignoreSearch: true });
+      const network = fetch(e.request)
+        .then((res) => {
+          if (res && (res.ok || res.type === 'opaque')) cache.put(e.request, res.clone());
+          return res;
+        })
+        .catch(() => cached);
+      return cached || network;
+    })
+  );
+});
