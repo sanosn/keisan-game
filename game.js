@@ -6,7 +6,7 @@
    ========================================================= */
 
 const QUESTIONS_PER_PLAY = 10; // 10もん チャレンジの問題数
-const TIME_LIMIT_SEC = 300;    // 5ふん チャレンジの制限時間
+const TIME_LIMIT_SEC = 180;    // 3ぷん チャレンジの制限時間
 const HURRY_SEC = 10;          // のこり何秒から「いそいで！」表示にするか
 
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -63,7 +63,7 @@ function makeCountQuestion(min, max) {
 // grade: 0 は「にゅうがく まえ」
 // render(q): 式のかわりに絵などを出したいときに使う / eq: 「=」のかわりに出す文字
 // make(): 問題を1つ作る / hint(q): まちがえたときに出すヒント
-// targetSec: 10もんの もくひょうタイム(秒) / targetCount: 5ふんの もくひょう問題数
+// targetSec: 10もんの もくひょうタイム(秒) / targetCount: 3ぷんの もくひょう問題数
 const LEVELS = [
   {
     id: 'k-count5',
@@ -72,7 +72,7 @@ const LEVELS = [
     sample: 'りんごが 3こ → 3',
     color: '#FF7FA0',
     targetSec: 40,
-    targetCount: 60,
+    targetCount: 36,
     eq: 'いくつ？',
     make() { return makeCountQuestion(1, 5); },
     render(q) { return countItemsHTML(q.a, q.b); },
@@ -85,7 +85,7 @@ const LEVELS = [
     sample: 'ほしが 7こ → 7',
     color: '#FF9F6B',
     targetSec: 60,
-    targetCount: 45,
+    targetCount: 27,
     eq: 'いくつ？',
     make() { return makeCountQuestion(1, 10); },
     render(q) { return countItemsHTML(q.a, q.b); },
@@ -98,7 +98,7 @@ const LEVELS = [
     sample: '5 + 3',
     color: '#3EC1F3',
     targetSec: 60,
-    targetCount: 50,
+    targetCount: 30,
     make() {
       const a = rand(1, 9);
       const b = rand(1, 10 - a);
@@ -113,7 +113,7 @@ const LEVELS = [
     sample: '8 + 5',
     color: '#FF8A3D',
     targetSec: 90,
-    targetCount: 35,
+    targetCount: 21,
     make() {
       const a = rand(2, 9);
       const b = rand(11 - a, 9); // こたえが 11〜18 になる
@@ -132,7 +132,7 @@ const LEVELS = [
     sample: '8 − 5',
     color: '#3CC75A',
     targetSec: 60,
-    targetCount: 45,
+    targetCount: 27,
     make() {
       const a = rand(2, 10);
       const b = rand(1, a); // こたえが 0 になることもある
@@ -147,7 +147,7 @@ const LEVELS = [
     sample: '13 − 7',
     color: '#B46CFF',
     targetSec: 90,
-    targetCount: 30,
+    targetCount: 18,
     make() {
       const a = rand(11, 18);
       const b = rand(a - 9, 9); // 一の位どうしでは ひけない組み合わせ
@@ -160,7 +160,7 @@ const LEVELS = [
   },
 ];
 
-// 5ふん チャレンジ用：直前に出た問題と かぶらないように1問つくる
+// 3ぷん チャレンジ用：直前に出た問題と かぶらないように1問つくる
 function makeNextQuestion(level, recent) {
   let q;
   for (let i = 0; i < 30; i++) {
@@ -187,8 +187,8 @@ function makeQuestions(level) {
 }
 
 /* ===== 記録の保存（タブレットのブラウザ内に保存） ===== */
-// mode: 'ten'（10もん）/ 'time'（5ふん）で別々に記録する
-const bestKey = (mode, levelId) => (mode === 'time' ? 'best-5min:' : 'best:') + levelId;
+// mode: 'ten'（10もん）/ 'time'（3ぷん）で別々に記録する
+const bestKey = (mode, levelId) => (mode === 'time' ? 'best-3min:' : 'best:') + levelId;
 function loadBest(mode, levelId) {
   try { return JSON.parse(localStorage.getItem(bestKey(mode, levelId))); } catch { return null; }
 }
@@ -551,7 +551,7 @@ const el = {
 };
 
 const state = {
-  mode: loadMode(), // 'ten'＝10もん チャレンジ / 'time'＝5ふん チャレンジ
+  mode: loadMode(), // 'ten'＝10もん チャレンジ / 'time'＝3ぷん チャレンジ
   level: null,
   questions: [],
   index: 0,
@@ -696,7 +696,7 @@ function tickTimer() {
     el.timer.textContent = fmtTime(elapsedSec());
     return;
   }
-  // 5ふん チャレンジ：のこり時間を表示する
+  // 3ぷん チャレンジ：のこり時間を表示する
   const left = Math.max(0, TIME_LIMIT_SEC - elapsedSec());
   const sec = Math.ceil(left);
   el.timer.textContent = fmtTime(sec);
@@ -810,7 +810,7 @@ const PRAISE = {
   3: ['てんさい！', 'さいこう！', 'とまらない！', 'かみわざ！'],
 };
 
-// 正解してから次の問題までの待ち時間(ミリ秒)。5ふん チャレンジは時間が大事なので短め
+// 正解してから次の問題までの待ち時間(ミリ秒)。3ぷん チャレンジは時間が大事なので短め
 const NEXT_WAIT = {
   ten: [0, 850, 1100, 1300],
   time: [0, 550, 700, 850],
@@ -829,7 +829,7 @@ function onCorrect() {
   replay(el.maru, 'draw');
 
   if (isTimeMode()) {
-    // 5ふん チャレンジ：10れんぞく・20れんぞく…のたびに キュイン！
+    // 3ぷん チャレンジ：10れんぞく・20れんぞく…のたびに キュイン！
     if (state.combo % 10 === 0) {
       celebrateKyuin(`${state.combo}れんぞく！`, 1500);
       return;
@@ -944,7 +944,7 @@ function finish() {
   let title;
 
   if (isTimeMode()) {
-    // 5ふん チャレンジ：正解した問題数で★を決める
+    // 3ぷん チャレンジ：正解した問題数で★を決める
     const count = state.correct;
     if (count >= lv.targetCount * 0.6) stars = 2;
     if (count >= lv.targetCount) stars = 3;
@@ -1021,7 +1021,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'Backspace') onKey('del');
 });
 
-// モードの切りかえ（10もん / 5ふん）
+// モードの切りかえ（10もん / 3ぷん）
 document.querySelectorAll('.mode-btn').forEach((b) => {
   b.addEventListener('click', () => {
     Sound.unlock();

@@ -75,7 +75,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; touch-action: ma
 .logo i:nth-child(4n)   { background: var(--cream); transform: rotate(5deg); animation-delay: .6s; }
 @keyframes tile-bob { 50% { translate: 0 -6px; } }
 
-/* モード切りかえ（10もん / 5ふん） */
+/* モード切りかえ（10もん / 3ぷん） */
 .mode-switch { display: flex; gap: 12px; width: 100%; max-width: 820px; }
 .mode-btn {
   flex: 1;
