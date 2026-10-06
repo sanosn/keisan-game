@@ -1,0 +1,20 @@
+# 公開したくないものを誤って GitHub に上げないための設定
+
+# 写真・動画・録音（子どもの声や顔、位置情報入りの写真などを防ぐ）
+*.jpg
+*.jpeg
+*.heic
+*.mp4
+*.mov
+*.m4a
+*.wav
+*.mp3
+
+# パソコンが自動で作るファイル
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# メモ・下書き
+*.local.*
+memo*.txt
