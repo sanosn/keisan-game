@@ -59,6 +59,49 @@ function makeCountQuestion(min, max) {
   return { a: n, b: type, op: 'count', answer: n };
 }
 
+// ===== さくらんぼ算（いくつと いくつ）用 =====
+// missing: どこを答えるか（'left' / 'right' = 分ける問題、'top' = 合わせる問題）
+function makeCherryQuestion(whole, missing) {
+  const l = rand(1, whole - 1);
+  const r = whole - l;
+  const answer = missing === 'top' ? whole : missing === 'left' ? l : r;
+  return { a: whole, b: `${l}-${r}-${missing}`, op: 'cherry', answer, parts: [l, r], missing };
+}
+
+// さくらんぼの絵。答える場所には answer-slot を置き、あとで入力欄をそこへ移す
+function cherryHTML(q) {
+  const [l, r] = q.parts;
+  const slot = (cls) => `<span class="${cls} answer-slot"></span>`;
+  const top = q.missing === 'top' ? slot('cherry-top') : `<span class="cherry-top">${q.a}</span>`;
+  const left = q.missing === 'left' ? slot('cherry-ball') : `<span class="cherry-ball">${l}</span>`;
+  const right = q.missing === 'right' ? slot('cherry-ball') : `<span class="cherry-ball">${r}</span>`;
+  return `<span class="cherry">
+    ${top}
+    <svg class="cherry-stems" viewBox="0 0 200 50" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M100 0 L36 50 M100 0 L164 50"/>
+    </svg>
+    <span class="cherry-row">${left}${right}</span>
+  </span>`;
+}
+
+const knownPart = (q) => (q.missing === 'left' ? q.parts[1] : q.parts[0]);
+
+function cherryDotsHint(q) {
+  const [l, r] = q.parts;
+  if (q.missing === 'top') {
+    return `${dots(l, 'a')}<span class="dot-gap"></span>${dots(r, 'b')}<br>ぜんぶで いくつ？ かぞえてみよう`;
+  }
+  const known = knownPart(q);
+  return `${dots(known, 'a')}${dots(q.a - known, 'empty')}<br>${q.a} は ${known} と あと いくつ？`;
+}
+
+function tenFrameHint(q) {
+  const known = knownPart(q);
+  let cells = '';
+  for (let i = 0; i < 10; i++) cells += `<span class="dot ${i < known ? 'a' : 'empty'}"></span>`;
+  return `<span class="tenframe">${cells}</span><br>あいている ところは いくつ？`;
+}
+
 // ===== レベル定義 =====
 // grade: 0 は「にゅうがく まえ」
 // render(q): 式のかわりに絵などを出したいときに使う / eq: 「=」のかわりに出す文字
@@ -90,6 +133,36 @@ const LEVELS = [
     make() { return makeCountQuestion(1, 10); },
     render(q) { return countItemsHTML(q.a, q.b); },
     hint() { return '5 の まとまりを みつけて、ゆびで さしながら かぞえよう'; },
+  },
+  {
+    id: 'k-cherry9',
+    grade: 0,
+    title: 'さくらんぼ 2〜9',
+    sample: '7 は 3 と □',
+    color: '#E8505B',
+    targetSec: 60,
+    targetCount: 27,
+    eq: '',
+    make() {
+      const roll = Math.random();
+      const missing = roll < 0.2 ? 'top' : roll < 0.6 ? 'left' : 'right'; // 2割は「合わせる」問題
+      return makeCherryQuestion(rand(2, 9), missing);
+    },
+    render(q) { return cherryHTML(q); },
+    hint(q) { return cherryDotsHint(q); },
+  },
+  {
+    id: 'k-cherry10',
+    grade: 0,
+    title: 'さくらんぼ 10',
+    sample: '10 は 6 と □',
+    color: '#C2185B',
+    targetSec: 60,
+    targetCount: 30,
+    eq: '',
+    make() { return makeCherryQuestion(10, Math.random() < 0.5 ? 'left' : 'right'); },
+    render(q) { return cherryHTML(q); },
+    hint(q) { return tenFrameHint(q); },
   },
   {
     id: 'g1-add10',
@@ -741,9 +814,10 @@ function showQuestion() {
     el.progress.style.width = `${(state.index / QUESTIONS_PER_PLAY) * 100}%`;
   }
   const lv = state.level;
+  el.exprWrap.appendChild(el.boxes); // 前の問題で絵の中へ移した入力欄を、元の場所（いちばん後ろ）へ戻す
   if (lv.render) el.expr.innerHTML = lv.render(q);
   else el.expr.textContent = `${q.a} ${q.op} ${q.b}`;
-  el.eq.textContent = lv.eq || '=';
+  el.eq.textContent = lv.eq ?? '='; // eq: '' のときは何も出さない
   el.exprWrap.classList.toggle('counting', !!lv.render);
   el.card.classList.remove('hinted');
   el.boxes.innerHTML = '';
@@ -752,6 +826,9 @@ function showQuestion() {
     b.className = 'box';
     el.boxes.appendChild(b);
   });
+  // さくらんぼ算などで「ここに答える」場所があれば、入力欄をそこへ移す
+  const slot = el.expr.querySelector('.answer-slot');
+  if (slot) slot.appendChild(el.boxes);
   el.maru.classList.remove('draw');
   el.hint.classList.remove('show');
   el.hint.innerHTML = '';

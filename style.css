@@ -210,6 +210,34 @@ button { font-family: inherit; color: inherit; cursor: pointer; touch-action: ma
 }
 .count-item svg { width: 100%; height: 100%; display: block; }
 @keyframes item-in { from { transform: scale(0); } }
+.expr .eq:empty { display: none; }
+
+/* さくらんぼ算：上に「ぜんぶの数」、枝わかれして下に2つの実 */
+.cherry { display: inline-flex; flex-direction: column; align-items: center; font-size: .85em; line-height: 1; }
+.cherry-top, .cherry-ball {
+  width: 1.5em; height: 1.5em; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 4px solid var(--ink); border-radius: 50%;
+  animation: item-in .35s cubic-bezier(.2,1.6,.4,1) backwards;
+}
+.cherry-top { background: #fff; }
+.cherry-ball { background: #E8505B; color: #fff; }
+.cherry-row .cherry-ball:nth-child(2) { animation-delay: .08s; }
+.cherry-top.answer-slot, .cherry-ball.answer-slot { background: #FFE3E8; }
+.cherry-stems { width: 3.2em; height: .7em; display: block; overflow: visible; }
+.cherry-stems path { fill: none; stroke: #3C9A4B; stroke-width: 5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.cherry-row { width: 3.2em; display: flex; justify-content: space-between; }
+.answer-slot .boxes { font-size: .85em; }
+.answer-slot .box { border-width: 3px; }
+
+/* さくらんぼのヒント */
+.dot.empty { background: #fff; border-style: dashed; }
+.tenframe {
+  display: inline-grid; grid-template-columns: repeat(5, auto); gap: 4px;
+  padding: 4px; margin-bottom: 2px;
+  border: 3px solid var(--ink); border-radius: 8px; background: #fff;
+}
+.tenframe .dot { margin: 0; }
 /* ヒント：番号を出して「ゆびで さしながら」数えられるようにする */
 .count-item .num {
   position: absolute; right: -4px; bottom: -4px;

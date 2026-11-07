@@ -4,7 +4,7 @@
      ネットがないときは保存したものを使う
    - アプリを更新したら VERSION の数字を1つ上げる
    ========================================================= */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'keisan-' + VERSION;
 
 const APP_FILES = [
